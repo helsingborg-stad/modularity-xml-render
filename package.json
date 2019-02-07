@@ -1,0 +1,70 @@
+{
+  "name": "modularity-xml-render",
+  "version": "1.0.0",
+  "description": "Renders XML data.",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/helsingborg-stad/modularity-xml-render.git"
+  },
+  "author": "Johan Silvergrund & Jonatan Hansson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/helsingborg-stad/modularity-xml-render/issues"
+  },
+  "homepage": "https://github.com/helsingborg-stad/modularity-xml-render",
+  "peerDependencies": {
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "@babel/preset-react": "^7.0.0",
+    "babelify": "^10.0.0",
+    "browserify": "^16.2.3",
+    "del": "^3.0.0",
+    "es6-promise": "^4.2.5",
+    "event-stream": "^4.0.0",
+    "gulp": "^3.8.11",
+    "gulp-autoprefixer": "^3.1.0",
+    "gulp-clean-css": "^3.10.0",
+    "gulp-eslint": "^5.0.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-react": "^3.1.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-rev": "^8.1.1",
+    "gulp-sass": "^2.1.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-streamify": "^1.0.2",
+    "gulp-terser": "^1.1.6",
+    "gulp-uglify": "^1.1.0",
+    "gulp-util": "^3.0.8",
+    "hbg-react": "^0.6.2",
+    "immutability-helper": "^2.8.1",
+    "isomorphic-fetch": "^2.2.1",
+    "node-notifier": "^5.3.0",
+    "object-path": "^0.11.4",
+    "react": "^16.6.3",
+    "react-dnd": "^7.0.2",
+    "react-dnd-html5-backend": "^7.0.2",
+    "react-dom": "^16.6.3",
+    "react-onclickoutside": "^6.7.1",
+    "recursive-iterator": "2.0.3",
+    "rev-del": "^1.0.5",
+    "run-sequence": "^2.2.1",
+    "uuid": "^3.3.2",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "dependencies": {
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/polyfill": "^7.0.0",
+    "axios": "^0.18.0",
+    "xml-js": "^1.6.9"
+  }
+}
