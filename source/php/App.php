@@ -44,7 +44,7 @@ class App
     public function registerFrontendAssets()
     {
         if (file_exists(MODULARITYXMLRENDER_PATH . '/dist/' . Helper\CacheBust::name('js/Front/IndexFront.js'))) {
-            wp_register_script('modularity-json-render', MODULARITYXMLRENDER_URL . '/dist/' . Helper\CacheBust::name('js/Front/IndexFront.js'), array('jquery', 'react', 'react-dom'));
+            wp_register_script('modularity-xml-render', MODULARITYXMLRENDER_URL . '/dist/' . Helper\CacheBust::name('js/Front/IndexFront.js'), array('jquery', 'react', 'react-dom'));
         }
     }
 
@@ -70,7 +70,7 @@ class App
      */
     public function registerMetaBoxes()
     {
-        add_meta_box('json-api-fields', __('Data settings', 'modularity-xml-render'),
+        add_meta_box('xml-render-fields', __('Data settings', 'modularity-xml-render'),
             function () {
                 echo '<div id="modularity-xml-render"></div>';
             }, 'mod-xml-render', 'normal', 'high');
