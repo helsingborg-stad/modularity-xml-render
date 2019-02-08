@@ -54,7 +54,7 @@ class App
      */
     public function registerAdminAssets()
     {
-        if (file_exists(MODULARITYXMLRENDER_PATH . '/dist/' . Helper\CacheBust::name('css/modularity-json-render-admin.css'))) {
+        if (file_exists(MODULARITYXMLRENDER_PATH . '/dist/' . Helper\CacheBust::name('css/modularity-xml-render-admin.css'))) {
             wp_register_style('modularity-xml-render-admin', MODULARITYXMLRENDER_URL . '/dist/' . Helper\CacheBust::name('css/modularity-xml-render-admin.css'));
         }
 

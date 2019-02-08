@@ -68,7 +68,7 @@ gulp.task('watch', function() {
 // ==========================================================================
 gulp.task('sass', function() {
     var filePath = 'source/sass/';
-    var files = ['modularity-json-render-admin.scss'];
+    var files = ['modularity-xml-render-admin.scss'];
 
     var tasks = files.map(function(entry) {
         return gulp

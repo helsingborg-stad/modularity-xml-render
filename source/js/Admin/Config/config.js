@@ -23,6 +23,7 @@ function dropAreas(view) {
             dropAreas.push({ id: 'heading', limit: null, label: translation.headings });
             break;
     }
+    console.log(dropAreas);
     return dropAreas;
 }
 
