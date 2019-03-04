@@ -1,7 +1,9 @@
 import ListItem from './ListItem';
 import DropArea from './DropArea';
 import ViewOption from './ViewOption';
+import PostType from './PostType';
 import { dropAreas } from '../Config/config';
+import { Dropdown } from 'hbg-react';
 import RecursiveIterator from 'recursive-iterator';
 import objectPath from 'object-path';
 
@@ -67,7 +69,11 @@ class DataList extends React.Component {
 
     render() {
         let { data } = Object.assign({}, this.props);
-        const { translation, view } = this.props;
+
+        const xmldataKeys = null;
+        let dropDownDataNodes = null;
+
+        const { translation, view, doExport, postTypeId } = this.props;
         const fieldMap = this.props.fieldMap;
 
         if (Array.isArray(data)) {
@@ -106,6 +112,23 @@ class DataList extends React.Component {
                 }
             }
 
+            dropDownDataNodes = this.renderNodes(objectData);
+
+            let dropDownItems;
+            let dropDownKeys;
+
+            if (dropDownDataNodes !== null) {
+                dropDownItems = [];
+                for (let int = 0; dropDownDataNodes < int; int++) {
+                    // dropDownDataNodes.map(item => dropDownItems.push(item));
+                    // dropDownDataNodes.map(dropDownItems[int].props.value);
+                    console.log(dropDownDataNodes[int]);
+                }
+
+                dropDownItems = Array.from(new Set(dropDownItems));
+                dropDownKeys = 0;
+            }
+
             return (
                 <div className="grid nav-menus-php">
                     <div className="grid__item">
@@ -121,6 +144,34 @@ class DataList extends React.Component {
                             setView={this.setView.bind(this)}
                             translation={translation}
                         />
+
+                        <PostType
+                            postTypeId={postTypeId}
+                            xmlDataKeys={xmldataKeys}
+                            doExport={doExport}
+                            translation={translation}
+                        />
+                        <div className="grid-md-2 grid-sm-4 dropdown showDataDropDown">
+                            <Dropdown title={translation.category}>
+                                {dropDownItems.map((item, index) => (
+                                    <a
+                                        key={'dropLink-' + dropDownKeys++}
+                                        onClick={() => {
+                                            /*
+                                            const categoryProps = {
+                                                Id: item.Id,
+                                                Name: item.Name,
+                                            };
+                                            this.getJsonData(false, false, categoryProps);
+                                            */
+                                        }}
+                                    >
+                                        {item[index]}
+                                    </a>
+                                ))}
+                            </Dropdown>
+                        </div>
+
                         <div className="drop-container">
                             {dropAreas(view).map(area => {
                                 return (

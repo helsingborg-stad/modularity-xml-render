@@ -9,7 +9,7 @@ class Settings extends React.Component {
         this.state = {
             showFieldSelection: false,
             url: '',
-            view: 'list',
+            view: 'posttype',
             isLoaded: false,
             error: null,
             items: [],
@@ -30,7 +30,7 @@ class Settings extends React.Component {
             const options = modXMLRender.options;
             this.setState({
                 url: options.url ? options.url : '',
-                view: options.view ? options.view : 'list',
+                view: options.view ? options.view : 'posttype',
                 fieldMap: options.fieldMap
                     ? JSON.parse(options.fieldMap)
                     : {

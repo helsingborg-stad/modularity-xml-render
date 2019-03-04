@@ -43,6 +43,54 @@ class XmlRender extends \Modularity\Module
         return $messages;
     }
 
+
+    /**
+     * Extracting XML Data by key - Creating new posts
+     * @param $sxe
+     * @param $backEndKey
+     * @return mixed
+     */
+    public function extractXMLDataCreatePosts($xmlData, $backEndKey)
+    {
+        $returnArray = array();
+        foreach ((array)$xmlData as $key => $value) {
+
+            if (is_array($value) && !$this->is_assoc($value)) {
+                $indies = array();
+                foreach ($value as $secondkey => $secondvalue) {
+                    $indies[$secondkey] = $this->extractXMLDataCreatePosts($secondvalue, $backEndKey);
+                }
+                $returnArray[$key] = $indies;
+
+            } else {
+                if (is_array($value)) {
+                    $returnArray[$key] = $this->extractXMLDataCreatePosts($value, $backEndKey);
+                } else {
+                    if ($key === 'AssignmentId')
+                        echo $value;
+                    if ($backEndKey === $key) {
+                        echo "<p>key: ".$key .' value:'. $value."</p>";
+
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $array
+     * @return bool
+     */
+    function is_assoc($array)
+    {
+        return (bool)count(array_filter(array_keys($array), 'is_string'));
+    }
+
+    /**
+     * @param $postId
+     * @param $post
+     * @param $update
+     */
     public function saveOptions($postId, $post, $update)
     {
         if ($post->post_type !== 'mod-' . $this->slug) {
@@ -54,10 +102,24 @@ class XmlRender extends \Modularity\Module
             $view = $_POST['mod_xml_render_view'];
             $fieldMap = json_decode(html_entity_decode(stripslashes($_POST['mod_xml_render_fieldmap'])));
 
+            if ($view === 'posttype') {
+                $data = wp_remote_get($_POST['mod_xml_render_url']);
+                $parseXML = json_decode(json_encode(simplexml_load_string($data['body'])), true);
+                $xmlData = [];
+                foreach ($fieldMap->content as $items) {
+                    $refVar = (substr_count($items->item->value, '.')) ? substr($items->item->value,
+                        strrpos($items->item->value, '.') + 1) : $items->item->value;
+                    $xmlData[$items->item->value] = $this->extractXMLDataCreatePosts($parseXML['Assignments'], $refVar);
+                }
+            }
+
+            exit;
+
             if ($url && $view && isset($fieldMap->heading) && !empty($fieldMap->heading)) {
                 update_post_meta($postId, 'xml_url', $url);
                 update_post_meta($postId, 'view', $view);
                 update_post_meta($postId, 'fieldmap', $_POST['mod_xml_render_fieldmap']);
+
             } else {
                 $this->addSettingsError();
                 remove_action('save_post', array($this, 'saveOptions'));
@@ -87,7 +149,8 @@ class XmlRender extends \Modularity\Module
         $data['url'] = $options['url'];
         $data['view'] = $options['view'];
         $data['fieldMap'] = $options['fieldMap'];
-        $data['classes'] = implode(' ', apply_filters('Modularity/Module/Classes', array('box', 'box-panel'), $this->post_type, $this->args));
+        $data['classes'] = implode(' ',
+            apply_filters('Modularity/Module/Classes', array('box', 'box-panel'), $this->post_type, $this->args));
 
         return $data;
     }
@@ -146,16 +209,20 @@ class XmlRender extends \Modularity\Module
                 'select' => __('Select', 'modularity-xml-render'),
                 'couldNotFetch' => __('Could not fetch data from URL.', 'modularity-xml-render'),
                 'list' => __('List', 'modularity-xml-render'),
+                'posttype' => __('Export to post type', 'modularity-xml-render'),
                 'accordion' => __('Accordion', 'modularity-xml-render'),
                 'accordiontable' => __('Accordion table', 'modularity-xml-render'),
                 'table' => __('Table', 'modularity-xml-render'),
                 'selectView' => __('Select view', 'modularity-xml-render'),
-                'dragAndDropInfo' => __('Drag and drop fields into the areas to the right. The areas accept different amount of values depending on selected view.', 'modularity-xml-render'),
+                'dragAndDropInfo' => __('Drag and drop fields into the areas to the right. The areas accept different amount of values depending on selected view.',
+                    'modularity-xml-render'),
                 'value' => __('Value', 'modularity-xml-render'),
                 'prefix' => __('Prefix', 'modularity-xml-render'),
                 'suffix' => __('Suffix', 'modularity-xml-render'),
                 'selectDateFormat' => __('Select date format', 'modularity-xml-render'),
                 'none' => __('None', 'modularity-xml-render'),
+                'exportToPostType' => __('Export to post type', 'modularity-xml-render'),
+                'exportChoice' => __('Export to post type', 'modularity-xml-render'),
             )
         ));
 
@@ -170,7 +237,8 @@ class XmlRender extends \Modularity\Module
         $options = array(
             'url' => $url ? $url : null,
             'view' => $view ? $view : null,
-            'fieldMap' => $fieldmap ? $fieldmap : null
+            'fieldMap' => $fieldmap ? $fieldmap : null,
+            //'xmlData' =>
         );
 
         return $options;

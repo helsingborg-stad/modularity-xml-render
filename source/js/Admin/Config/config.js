@@ -4,6 +4,9 @@ function dropAreas(view) {
     let dropAreas = [];
 
     switch (view) {
+        case 'posttype':
+            dropAreas.push({ id: 'content', limit: null, label: translation.content });
+            break;
         case 'list':
             dropAreas.push({ id: 'heading', limit: 1, label: translation.heading });
             break;
