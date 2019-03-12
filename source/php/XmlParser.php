@@ -39,13 +39,14 @@ class XmlParser
      */
     public function getXmlData($request)
     {
-        $data  = wp_remote_get($request->get_param('url'));
-        $parseXML = simplexml_load_string($data['body']);
+        $data = wp_remote_get($request->get_param('url'));
+        $result = simplexml_load_string($data['body']);
 
         return wp_send_json(
             array(
-                'result' => $parseXML
+                'result' => $result
             )
         );
+
     }
 }

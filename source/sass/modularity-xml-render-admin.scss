@@ -141,7 +141,13 @@
     .item-edit::before {
         content: '\f158';
     }
+
     #showDataDropDown {
+        display:none;
+    }
+
+    .postTypeDropDown {
+        padding-top:10px;
         display:none;
     }
 }

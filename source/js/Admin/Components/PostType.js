@@ -1,23 +1,34 @@
-const PostType = ({ doExport, xmlDataKeys, postTypeId, translation }) => (
+const PostType = ({ doExport, xmlDataKeys, postTypeId, translation, postTypes }) => (
     <div>
         <h3>{translation.exportToPostType}</h3>
-        <div className="radio">
+        <div className="checkBox">
             <label>
                 <input
                     type="checkbox"
-                    value={doExport}
+                    value="exportToPostType"
                     onClick={event => {
-                        const showData = document.getElementById('showDataDropDown');
-                        if (window.getComputedStyle(showData).display === 'none') {
-                            showData.style.display = 'block';
+                        if (event.target.checked) {
+                            document.getElementById('showDataDropDown').style.display = 'block';
                         } else {
-                            showData.style.display = 'none';
+                            document.getElementById('showDataDropDown').style.display = 'none';
                         }
                     }}
                 />
                 {translation.exportChoice}
             </label>
         </div>
+        <div id="showDataDropDown" className="postTypeDropDown">
+            <label>
+                <select name="postType">
+                    {postTypes.map(ptype => (
+                        <option key={ptype} value={ptype}>
+                            {ptype}
+                        </option>
+                    ))}
+                </select>
+            </label>
+        </div>
     </div>
 );
+
 export default PostType;

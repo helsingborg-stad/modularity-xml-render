@@ -34,7 +34,7 @@ class FieldSelection extends React.Component {
     }
 
     render() {
-        const { url, view, error, fieldMap, translation, isLoaded, items } = this.props;
+        const { url, view, error, fieldMap, translation, postTypes, isLoaded, items } = this.props;
 
         if (error) {
             return (
@@ -54,6 +54,7 @@ class FieldSelection extends React.Component {
                     fieldMap={fieldMap}
                     updateFieldMap={this.updateFieldMap.bind(this)}
                     translation={translation}
+                    postTypes={postTypes}
                 />
             );
         }

@@ -86,7 +86,7 @@ class Settings extends React.Component {
     }
 
     render() {
-        const { translation } = this.props;
+        const { translation, postTypes } = this.props;
         const { showFieldSelection, url, view, error, isLoaded, items } = this.state;
 
         if (showFieldSelection) {
@@ -105,6 +105,7 @@ class Settings extends React.Component {
                         fieldMap={this.state.fieldMap}
                         updateFieldMap={this.updateFieldMap.bind(this)}
                         translation={translation}
+                        postTypes={postTypes}
                     />
                     <InputFields {...this.state} />
                     <p>

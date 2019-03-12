@@ -3,9 +3,10 @@ import DropArea from './DropArea';
 import ViewOption from './ViewOption';
 import PostType from './PostType';
 import { dropAreas } from '../Config/config';
-import { Dropdown } from 'hbg-react';
+
 import RecursiveIterator from 'recursive-iterator';
 import objectPath from 'object-path';
+import getApiData from '../../Utilities/getApiData';
 
 class DataList extends React.Component {
     updateFieldMap(field, value) {
@@ -69,11 +70,9 @@ class DataList extends React.Component {
 
     render() {
         let { data } = Object.assign({}, this.props);
-
         const xmldataKeys = null;
-        let dropDownDataNodes = null;
 
-        const { translation, view, doExport, postTypeId } = this.props;
+        const { translation, view, doExport, postTypeId, postTypes } = this.props;
         const fieldMap = this.props.fieldMap;
 
         if (Array.isArray(data)) {
@@ -112,23 +111,6 @@ class DataList extends React.Component {
                 }
             }
 
-            dropDownDataNodes = this.renderNodes(objectData);
-
-            let dropDownItems;
-            let dropDownKeys;
-
-            if (dropDownDataNodes !== null) {
-                dropDownItems = [];
-                for (let int = 0; dropDownDataNodes < int; int++) {
-                    // dropDownDataNodes.map(item => dropDownItems.push(item));
-                    // dropDownDataNodes.map(dropDownItems[int].props.value);
-                    console.log(dropDownDataNodes[int]);
-                }
-
-                dropDownItems = Array.from(new Set(dropDownItems));
-                dropDownKeys = 0;
-            }
-
             return (
                 <div className="grid nav-menus-php">
                     <div className="grid__item">
@@ -150,27 +132,8 @@ class DataList extends React.Component {
                             xmlDataKeys={xmldataKeys}
                             doExport={doExport}
                             translation={translation}
+                            postTypes={Object.keys(postTypes).map(key => postTypes[key])}
                         />
-                        <div className="grid-md-2 grid-sm-4 dropdown showDataDropDown">
-                            <Dropdown title={translation.category}>
-                                {dropDownItems.map((item, index) => (
-                                    <a
-                                        key={'dropLink-' + dropDownKeys++}
-                                        onClick={() => {
-                                            /*
-                                            const categoryProps = {
-                                                Id: item.Id,
-                                                Name: item.Name,
-                                            };
-                                            this.getJsonData(false, false, categoryProps);
-                                            */
-                                        }}
-                                    >
-                                        {item[index]}
-                                    </a>
-                                ))}
-                            </Dropdown>
-                        </div>
 
                         <div className="drop-container">
                             {dropAreas(view).map(area => {

@@ -1,11 +1,15 @@
-const { translation } = modXMLRender;
+const { translation, posttypes } = modXMLRender;
 
 function dropAreas(view) {
     let dropAreas = [];
-
     switch (view) {
         case 'posttype':
-            dropAreas.push({ id: 'content', limit: null, label: translation.content });
+            dropAreas.push({
+                id: 'content',
+                limit: null,
+                label: translation.content,
+                postTypes: posttypes,
+            });
             break;
         case 'list':
             dropAreas.push({ id: 'heading', limit: 1, label: translation.heading });
@@ -26,8 +30,8 @@ function dropAreas(view) {
             dropAreas.push({ id: 'heading', limit: null, label: translation.headings });
             break;
     }
-    console.log(dropAreas);
+
     return dropAreas;
 }
 
-export { dropAreas, translation };
+export { dropAreas, translation, posttypes };

@@ -196,6 +196,7 @@ class XmlRender extends \Modularity\Module
         $options = $this->getOptions($post->ID);
         wp_localize_script('modularity-xml-render-admin-js', 'modXMLRender', array(
             'options' => $options,
+            'posttypes' => get_post_types(),
             'translation' => array(
                 'resetSettings' => __('Reset settings', 'modularity-xml-render'),
                 'validXMLUrl' => __('Enter a valid XML api url.', 'modularity-xml-render'),

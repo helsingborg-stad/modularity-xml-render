@@ -3,9 +3,9 @@ import 'es6-promise';
 import 'isomorphic-fetch';
 // Components
 import Settings from './Components/Settings';
-import { translation } from './Config/config';
+import { translation, posttypes } from './Config/config';
 
 const modJsonRenderElement = 'modularity-xml-render';
 const domElement = document.getElementById(modJsonRenderElement);
 
-ReactDOM.render(<Settings translation={translation} />, domElement);
+ReactDOM.render(<Settings postTypes={posttypes} translation={translation} />, domElement);
