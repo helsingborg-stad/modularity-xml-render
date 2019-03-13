@@ -6,6 +6,18 @@ class XmlRender extends \Modularity\Module
 {
     public $slug = 'xml-render';
     public $supports = array();
+    public $result = array();
+    public $ID = 0;
+
+    public $post_author = 0;
+    public $post_date = '';
+    public $post_content = '';
+    public $post_title = '';
+    public $post_excerpt = '';
+    public $post_status = 'publish';
+    public $meta_input = [];
+
+
 
     public function init()
     {
@@ -43,47 +55,160 @@ class XmlRender extends \Modularity\Module
         return $messages;
     }
 
+    /**
+     * postExists()
+     *
+     * Check wheter or not post already exists (within the post type)
+     * @return boolean
+     */
+    public function postExists()
+    {
+        if ($this->getPostId()) {
+            return true;
+        }
+
+        return false;
+    }
 
     /**
-     * Extracting XML Data by key - Creating new posts
-     * @param $sxe
-     * @param $backEndKey
-     * @return mixed
+     * getPostId()
+     *
+     * Returns post id if it exists (based on post type & assignmentID)
+     * @return int
      */
-    public function extractXMLDataCreatePosts($xmlData, $backEndKey)
+    public function getPostId($asignmentId, $postType)
     {
-        $returnArray = array();
-        foreach ((array)$xmlData as $key => $value) {
 
-            if (is_array($value) && !$this->is_assoc($value)) {
-                $indies = array();
-                foreach ($value as $secondkey => $secondvalue) {
-                    $indies[$secondkey] = $this->extractXMLDataCreatePosts($secondvalue, $backEndKey);
-                }
-                $returnArray[$key] = $indies;
+        global $wpdb;
+        $tablePrefix = $wpdb->prefix;
+        $sql = "
+            SELECT {$tablePrefix}posts.ID
+            FROM {$tablePrefix}posts
+            LEFT JOIN {$tablePrefix}postmeta ON {$tablePrefix}postmeta.post_id = {$tablePrefix}posts.ID
+            WHERE {$tablePrefix}postmeta.meta_value = '{$asignmentId}' AND {$tablePrefix}posts.post_type = '{$postType}' AND {$tablePrefix}posts.post_status != 'trash'
+        ";
+        $results = $wpdb->get_results($sql, ARRAY_A);
 
-            } else {
-                if (is_array($value)) {
-                    $returnArray[$key] = $this->extractXMLDataCreatePosts($value, $backEndKey);
-                } else {
-                    if ($key === 'AssignmentId')
-                        echo $value;
-                    if ($backEndKey === $key) {
-                        echo "<p>key: ".$key .' value:'. $value."</p>";
+        if (empty($results)) {
+            return 0;
+        }
 
-                    }
-                }
+        return (int)$results[0]['ID'];
+    }
+
+    public function exportToPostype($data, $designations)
+    {
+        var_dump($designations);
+        foreach($data as $item){
+            //echo $item[$designations]['designation'];
+            /*$this->post_title = $item[];
+            $this->post_excerpt = strip_tags($item->get_description());
+            $this->post_content = strip_tags($item->get_content());
+            $this->post_date = $item->get_date('Y-m-d H:i:s');
+
+            $this->meta_input = array(
+                'rss_id' => base_convert(md5($item->get_id()), 10, 36),
+                'rss_link' => $item->get_permalink(),
+                'rss_author' => is_object($item->get_author()) ? get_object_vars($item->get_author()) : $item->get_author(),
+                'rss_date' => strtotime($item->get_date('Y-m-d H:i:s'))
+            );
+
+            do_action('ImportRssFeed/Post', $this, $item);*/
+        }
+
+
+
+        var_dump($data);
+        exit;
+    }
+    /**
+     * updatePost($post, $force)
+     *
+     * Update post if RSS date is later, create new post if it doesn't exists within the post type
+     * @param object $post RSS post object (\ImportRssFeed\Post)
+     * @param boolean $force Wheter or not to force update
+     * @return boolean
+     */
+    public function updatePost(\ImportRssFeed\Post $post, $force = false)
+    {
+        $force = apply_filters('ImportRssFeed/ImportManager/updatePost/force', $force, $post);
+
+        if ($post->ID > 0) {
+            $newRssDate = strtotime($post->post_date);
+            $oldRssDate = get_post_meta($post->ID, 'rss_date');
+
+            if ($oldRssDate && $oldRssDate >= $newRssDate && !$force) {
+                return $post;
             }
         }
+
+        $args = get_object_vars($post);
+        $importedPostId = wp_insert_post(apply_filters('ImportRssFeed/ImportManager/updatePost/args', $args, $post, $force));
+
+        if (is_integer($importedPostId)) {
+            switch ($post->ID) {
+                case 0:
+                    $this->createdPosts++;
+                    break;
+
+                default:
+                    $this->updatedPosts++;
+            }
+
+            $post->ID = $importedPostId;
+        }
+
+        return $post;
     }
 
     /**
      * @param $array
-     * @return bool
+     * @return array|bool
      */
-    function is_assoc($array)
+    public function arrayFlatten($arr)
     {
-        return (bool)count(array_filter(array_keys($array), 'is_string'));
+        if (!is_array($arr)) {
+            return false;
+        }
+
+        $result = array();
+
+        foreach ($arr as $key => $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, $this->arrayFlatten($value));
+            } else {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $keys
+     * @param $ref
+     * @return array
+     */
+    public function interSectKeys($keys, $ref)
+    {
+        return array_intersect_key($keys, array_flip($ref));
+    }
+
+    /**
+     * @param $array
+     * @param $ref
+     * @return array
+     */
+    public function extractXMLData($array, $ref)
+    {
+        if (!isset($result) || !is_array($result)) {
+            $result = array();
+        }
+
+        foreach ($array as $item) {
+            $result[] = $this->interSectKeys($this->arrayFlatten($item), $ref);
+        }
+        return $result;
     }
 
     /**
@@ -93,27 +218,39 @@ class XmlRender extends \Modularity\Module
      */
     public function saveOptions($postId, $post, $update)
     {
+
         if ($post->post_type !== 'mod-' . $this->slug) {
             return;
         }
 
         if (array_key_exists('mod_xml_render_url', $_POST) && array_key_exists('mod_xml_render_fieldmap', $_POST)) {
+
             $url = $_POST['mod_xml_render_url'];
+            $export = $_POST['exportToPostType'];
             $view = $_POST['mod_xml_render_view'];
             $fieldMap = json_decode(html_entity_decode(stripslashes($_POST['mod_xml_render_fieldmap'])));
+            echo "<pre>";
+            print_r($fieldMap);
+            echo "</pre>";
+            if ($export === 'export') {
 
-            if ($view === 'posttype') {
-                $data = wp_remote_get($_POST['mod_xml_render_url']);
-                $parseXML = json_decode(json_encode(simplexml_load_string($data['body'])), true);
-                $xmlData = [];
+                $data = wp_remote_get($url);
+                $parseXML = (array)json_decode(json_encode(simplexml_load_string($data['body'])), true);
+                $parseXML = array_pop($parseXML['Assignments']);
+
+                $keys = [];
+
                 foreach ($fieldMap->content as $items) {
-                    $refVar = (substr_count($items->item->value, '.')) ? substr($items->item->value,
+                    $keysFromBackend = (substr_count($items->item->value, '.')) ? substr($items->item->value,
                         strrpos($items->item->value, '.') + 1) : $items->item->value;
-                    $xmlData[$items->item->value] = $this->extractXMLDataCreatePosts($parseXML['Assignments'], $refVar);
+                    $keys[$keysFromBackend] = $keysFromBackend;
+                    $designations[$keysFromBackend]['designation'] = $items->designation;    // Fortsätt här imorgon ..... Designation måste mergas ihop med exportdata
                 }
-            }
 
-            exit;
+                $exportData = $this->extractXMLData($parseXML, $keys);
+                $this->exportToPostype($exportData, $designations);
+
+            }
 
             if ($url && $view && isset($fieldMap->heading) && !empty($fieldMap->heading)) {
                 update_post_meta($postId, 'xml_url', $url);
@@ -126,6 +263,7 @@ class XmlRender extends \Modularity\Module
                 wp_update_post(array('ID' => $postId, 'post_status' => 'draft'));
                 add_action('save_post', array($this, 'saveOptions'));
             }
+
         }
     }
 
@@ -223,7 +361,13 @@ class XmlRender extends \Modularity\Module
                 'selectDateFormat' => __('Select date format', 'modularity-xml-render'),
                 'none' => __('None', 'modularity-xml-render'),
                 'exportToPostType' => __('Export to post type', 'modularity-xml-render'),
-                'exportChoice' => __('Export to post type', 'modularity-xml-render'),
+                'exportChoice' => __('Yes, export', 'modularity-xml-render'),
+                'designation' => __('Post-type designation', 'modularity-xml-render'),
+                'designationValuesMetaData' => __('Meta data', 'modularity-xml-render'),
+                'designationValuesPostTitle' => __('Post title', 'modularity-xml-render'),
+                'designationValuesPostExcerpt' => __('Post excerpt', 'modularity-xml-render'),
+                'designationValuesPostContent' => __('Post content', 'modularity-xml-render'),
+                'designationValuesPostId' => __('Post id', 'modularity-xml-render'),
             )
         ));
 

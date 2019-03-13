@@ -47,6 +47,7 @@ const ListItem = ({ field, value, sample, children, fieldMap, onClickContainer, 
                         prefix=""
                         suffix=""
                         dateFormat=""
+                        designation=""
                     />
                 </li>
             );

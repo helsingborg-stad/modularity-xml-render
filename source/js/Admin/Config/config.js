@@ -3,7 +3,7 @@ const { translation, posttypes } = modXMLRender;
 function dropAreas(view) {
     let dropAreas = [];
     switch (view) {
-        case 'posttype':
+        case 'export':
             dropAreas.push({
                 id: 'content',
                 limit: null,

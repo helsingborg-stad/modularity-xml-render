@@ -100,6 +100,7 @@ class DropArea extends React.Component {
                             index={i}
                             listId={this.props.id}
                             heading={item.heading}
+                            designation={item.designation}
                             prefix={item.prefix}
                             suffix={item.suffix}
                             dateFormat={item.dateFormat}

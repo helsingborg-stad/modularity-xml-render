@@ -10,6 +10,7 @@ class DragItem extends React.Component {
             heading,
             prefix,
             suffix,
+            designation,
             dateFormat,
             fieldChange,
             removeItem,
@@ -89,6 +90,32 @@ class DragItem extends React.Component {
                                         />
                                     </label>
                                 </p>
+                                <div className="selectDesignation hidden description description-wide">
+                                    <label>
+                                        {translation.designation} <br />
+                                        <select
+                                            data-name="designation"
+                                            name="designation"
+                                            onChange={fieldChange}
+                                        >
+                                            <option key="1" value="metadata">
+                                                {translation.designationValuesMetaData}
+                                            </option>
+                                            <option key="2" value="postid">
+                                                {translation.designationValuesPostId}
+                                            </option>
+                                            <option key="3" value="posttitle">
+                                                {translation.designationValuesPostTitle}
+                                            </option>
+                                            <option key="4" value="postexcerpt">
+                                                {translation.designationValuesPostExcerpt}
+                                            </option>
+                                            <option key="5" value="postcontent">
+                                                {translation.designationValuesPostContent}
+                                            </option>
+                                        </select>
+                                    </label>
+                                </div>
                             </div>
                         )}
                         {isEditable && isDate(sample) && (
@@ -130,6 +157,33 @@ class DragItem extends React.Component {
                                         {getDateTime(sample)}
                                     </label>
                                 </div>
+                                <div className="selectDesignation hidden description description-wide">
+                                    <label>
+                                        {translation.designation}
+                                        <br />
+                                        <select
+                                            data-name="designation"
+                                            name="designation"
+                                            onChange={fieldChange}
+                                        >
+                                            <option key="1" value="metadata">
+                                                {translation.designationValuesMetaData}
+                                            </option>
+                                            <option key="2" value="postid">
+                                                {translation.designationValuesPostId}
+                                            </option>
+                                            <option key="3" value="posttitle">
+                                                {translation.designationValuesPostTitle}
+                                            </option>
+                                            <option key="4" value="postexcerpt">
+                                                {translation.designationValuesPostExcerpt}
+                                            </option>
+                                            <option key="5" value="postcontent">
+                                                {translation.designationValuesPostContent}
+                                            </option>
+                                        </select>
+                                    </label>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -147,6 +201,7 @@ const itemSource = {
             heading: props.heading,
             prefix: props.prefix,
             suffix: props.suffix,
+            designation: props.designation,
             dateFormat: props.dateFormat,
             listId: props.listId,
             item: props.item,

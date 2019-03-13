@@ -1,5 +1,5 @@
 const ViewOption = ({ view, setView, translation }) => (
-    <div>
+    <div id="xml-view-inputs">
         <h3>{translation.selectView}</h3>
         <div className="radio">
             <label>

@@ -131,6 +131,7 @@ class DataList extends React.Component {
                             postTypeId={postTypeId}
                             xmlDataKeys={xmldataKeys}
                             doExport={doExport}
+                            setView={this.setView.bind(this)}
                             translation={translation}
                             postTypes={Object.keys(postTypes).map(key => postTypes[key])}
                         />

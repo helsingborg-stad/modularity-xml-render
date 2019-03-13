@@ -143,11 +143,33 @@
     }
 
     #showDataDropDown {
-        display:none;
+        display: none;
     }
 
     .postTypeDropDown {
-        padding-top:10px;
-        display:none;
+        padding-top: 10px;
+        display: none;
+    }
+
+    .drop-container {
+        label {
+            font-size: 13px;
+            font-style: italic;
+            margin: 2px 0 5px;
+            color: #666;
+        }
+        .selectDesignation {
+            &.hidden {
+                display:none;
+            }
+        }
+        &.export {
+            .selectDesignation {
+                &.hidden {
+                    display:block;
+                }
+            }
+        }
+
     }
 }
