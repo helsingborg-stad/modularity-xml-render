@@ -7,7 +7,7 @@ class XmlRender extends \Modularity\Module
     public $slug = 'xml-render';
     public $supports = array();
     public $result = array();
-    public $ID = 0;
+    public $ID = null;
 
     public $post_author = 0;
     public $post_date = '';
@@ -16,7 +16,6 @@ class XmlRender extends \Modularity\Module
     public $post_excerpt = '';
     public $post_status = 'publish';
     public $meta_input = [];
-
 
 
     public function init()
@@ -96,31 +95,7 @@ class XmlRender extends \Modularity\Module
         return (int)$results[0]['ID'];
     }
 
-    public function exportToPostype($data, $designations)
-    {
-        var_dump($designations);
-        foreach($data as $item){
-            //echo $item[$designations]['designation'];
-            /*$this->post_title = $item[];
-            $this->post_excerpt = strip_tags($item->get_description());
-            $this->post_content = strip_tags($item->get_content());
-            $this->post_date = $item->get_date('Y-m-d H:i:s');
 
-            $this->meta_input = array(
-                'rss_id' => base_convert(md5($item->get_id()), 10, 36),
-                'rss_link' => $item->get_permalink(),
-                'rss_author' => is_object($item->get_author()) ? get_object_vars($item->get_author()) : $item->get_author(),
-                'rss_date' => strtotime($item->get_date('Y-m-d H:i:s'))
-            );
-
-            do_action('ImportRssFeed/Post', $this, $item);*/
-        }
-
-
-
-        var_dump($data);
-        exit;
-    }
     /**
      * updatePost($post, $force)
      *
@@ -143,7 +118,8 @@ class XmlRender extends \Modularity\Module
         }
 
         $args = get_object_vars($post);
-        $importedPostId = wp_insert_post(apply_filters('ImportRssFeed/ImportManager/updatePost/args', $args, $post, $force));
+        $importedPostId = wp_insert_post(apply_filters('ImportRssFeed/ImportManager/updatePost/args', $args, $post,
+            $force));
 
         if (is_integer($importedPostId)) {
             switch ($post->ID) {
@@ -212,13 +188,89 @@ class XmlRender extends \Modularity\Module
     }
 
     /**
+     * @param $exportData
+     * @param $designations
+     * @return mixed
+     */
+    public function mergeDataWithEqualKeys($exportData, $designations)
+    {
+        $data = [];
+        foreach ($exportData as $index => $value) {
+            foreach ($exportData[$index] as $key => $val) {
+                $data[$index][$key]['Value'] = $val;
+                foreach ($designations as $item => $desvalue) {
+                    $designationKey = key($designations[$item]);
+                    if ($key === $designationKey) {
+                        $data[$index][$key]['Designation'] = $designations[$item][key($designations[$item])];
+                    }
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * @param $url
+     * @param $fieldMap
+     */
+    public function exportData($url, $fieldMap)
+    {
+        $data = wp_remote_get($url);
+        $parseXML = (array)json_decode(json_encode(simplexml_load_string($data['body'])), true);
+        $parseXML = array_pop($parseXML['Assignments']);
+        $keys = [];
+        $int = 0;
+
+        foreach ($fieldMap->content as $items) {
+            $keysFromBackend = (substr_count($items->item->value, '.')) ? substr($items->item->value,
+                strrpos($items->item->value, '.') + 1) : $items->item->value;
+            $keys[$keysFromBackend] = $keysFromBackend;
+            $designations[$int][$keysFromBackend] = $items->designation;
+            $int++;
+        }
+
+        $exportData = $this->extractXMLData($parseXML, $keys);
+        $exportDataMergedWithDesignation = $this->mergeDataWithEqualKeys($exportData, $designations);
+        $this->exportToPostype($exportDataMergedWithDesignation);
+    }
+
+    /**
+     * @param $data
+     */
+    public function exportToPostype($data)
+    {
+        foreach($data as $key => $value){
+            foreach($data[$key] as $index => $dataValue ){
+
+                $this->ID = ($dataValue['Designation'] === 'postid') ? $dataValue['Value'] : 0;
+                $this->post_title = ($dataValue['Designation'] === 'posttitle') ? $dataValue['Value'] : 'Nyttjobb';
+                $this->post_excerpt = ($dataValue['Designation'] === 'postexcerpt') ? $dataValue['Value'] : 'Nyttjobb';
+                $this->post_content = ($dataValue['Designation'] === 'postcontent') ? $dataValue['Value'] : 'Nyttjobb';
+                $this->post_date = ($dataValue['Designation'] === 'postdate') ? $dataValue['Value'] : date('Y-m-d H:i:s');
+
+                if ($dataValue['Designation'] === 'metadata') {
+                    array_push($this->meta_input, array($index => $dataValue['Value']));
+                }
+            }
+
+            //do_action('ImportRssFeed/Post', $this, $item);
+        }
+        
+        /*echo "<pre>";
+        print_r($this);
+        echo "</pre>";*/
+
+        exit;
+    }
+
+
+    /**
      * @param $postId
      * @param $post
      * @param $update
      */
     public function saveOptions($postId, $post, $update)
     {
-
         if ($post->post_type !== 'mod-' . $this->slug) {
             return;
         }
@@ -229,27 +281,9 @@ class XmlRender extends \Modularity\Module
             $export = $_POST['exportToPostType'];
             $view = $_POST['mod_xml_render_view'];
             $fieldMap = json_decode(html_entity_decode(stripslashes($_POST['mod_xml_render_fieldmap'])));
-            echo "<pre>";
-            print_r($fieldMap);
-            echo "</pre>";
+
             if ($export === 'export') {
-
-                $data = wp_remote_get($url);
-                $parseXML = (array)json_decode(json_encode(simplexml_load_string($data['body'])), true);
-                $parseXML = array_pop($parseXML['Assignments']);
-
-                $keys = [];
-
-                foreach ($fieldMap->content as $items) {
-                    $keysFromBackend = (substr_count($items->item->value, '.')) ? substr($items->item->value,
-                        strrpos($items->item->value, '.') + 1) : $items->item->value;
-                    $keys[$keysFromBackend] = $keysFromBackend;
-                    $designations[$keysFromBackend]['designation'] = $items->designation;    // Fortsätt här imorgon ..... Designation måste mergas ihop med exportdata
-                }
-
-                $exportData = $this->extractXMLData($parseXML, $keys);
-                $this->exportToPostype($exportData, $designations);
-
+                $this->exportData($url, $fieldMap);
             }
 
             if ($url && $view && isset($fieldMap->heading) && !empty($fieldMap->heading)) {
@@ -306,7 +340,8 @@ class XmlRender extends \Modularity\Module
         wp_enqueue_script('modularity-' . $this->slug);
         wp_localize_script('modularity-' . $this->slug, 'modXMLRender', array(
             'translation' => array(
-                'somethingWentWrong' => __('Something went wrong, please try again later.', 'modularity-xml-render'),
+                'somethingWentWrong' => __('Something went wrong, please try again later.',
+                    'modularity-xml-render'),
                 'noResults' => __('No results found.', 'modularity-xml-render'),
                 'filterOn' => __('Filter on...', 'modularity-xml-render'),
                 'next' => __('Next', 'modularity-xml-render'),
@@ -363,11 +398,13 @@ class XmlRender extends \Modularity\Module
                 'exportToPostType' => __('Export to post type', 'modularity-xml-render'),
                 'exportChoice' => __('Yes, export', 'modularity-xml-render'),
                 'designation' => __('Post-type designation', 'modularity-xml-render'),
+                'designationChoose' => __('Choose designation', 'modularity-xml-render'),
                 'designationValuesMetaData' => __('Meta data', 'modularity-xml-render'),
                 'designationValuesPostTitle' => __('Post title', 'modularity-xml-render'),
                 'designationValuesPostExcerpt' => __('Post excerpt', 'modularity-xml-render'),
                 'designationValuesPostContent' => __('Post content', 'modularity-xml-render'),
                 'designationValuesPostId' => __('Post id', 'modularity-xml-render'),
+                'designationValuesPostDate' => __('Post date', 'modularity-xml-render'),
             )
         ));
 

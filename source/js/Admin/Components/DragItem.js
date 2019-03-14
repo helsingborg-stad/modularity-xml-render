@@ -98,6 +98,7 @@ class DragItem extends React.Component {
                                             name="designation"
                                             onChange={fieldChange}
                                         >
+                                            <option key="0">{translation.designationChoose}</option>
                                             <option key="1" value="metadata">
                                                 {translation.designationValuesMetaData}
                                             </option>
@@ -112,6 +113,9 @@ class DragItem extends React.Component {
                                             </option>
                                             <option key="5" value="postcontent">
                                                 {translation.designationValuesPostContent}
+                                            </option>
+                                            <option key="6" value="postdate">
+                                                {translation.designationValuesPostDate}
                                             </option>
                                         </select>
                                     </label>
@@ -155,33 +159,6 @@ class DragItem extends React.Component {
                                             onChange={fieldChange}
                                         />
                                         {getDateTime(sample)}
-                                    </label>
-                                </div>
-                                <div className="selectDesignation hidden description description-wide">
-                                    <label>
-                                        {translation.designation}
-                                        <br />
-                                        <select
-                                            data-name="designation"
-                                            name="designation"
-                                            onChange={fieldChange}
-                                        >
-                                            <option key="1" value="metadata">
-                                                {translation.designationValuesMetaData}
-                                            </option>
-                                            <option key="2" value="postid">
-                                                {translation.designationValuesPostId}
-                                            </option>
-                                            <option key="3" value="posttitle">
-                                                {translation.designationValuesPostTitle}
-                                            </option>
-                                            <option key="4" value="postexcerpt">
-                                                {translation.designationValuesPostExcerpt}
-                                            </option>
-                                            <option key="5" value="postcontent">
-                                                {translation.designationValuesPostContent}
-                                            </option>
-                                        </select>
                                     </label>
                                 </div>
                             </div>
