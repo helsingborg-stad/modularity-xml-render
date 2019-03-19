@@ -16,7 +16,7 @@ class XmlRender extends \Modularity\Module
     public $post_excerpt = '';
     public $post_status = 'publish';
     public $meta_input = [];
-
+    public $postType = '';
 
     public function init()
     {
@@ -69,73 +69,6 @@ class XmlRender extends \Modularity\Module
         return false;
     }
 
-    /**
-     * getPostId()
-     *
-     * Returns post id if it exists (based on post type & assignmentID)
-     * @return int
-     */
-    public function getPostId($asignmentId, $postType)
-    {
-
-        global $wpdb;
-        $tablePrefix = $wpdb->prefix;
-        $sql = "
-            SELECT {$tablePrefix}posts.ID
-            FROM {$tablePrefix}posts
-            LEFT JOIN {$tablePrefix}postmeta ON {$tablePrefix}postmeta.post_id = {$tablePrefix}posts.ID
-            WHERE {$tablePrefix}postmeta.meta_value = '{$asignmentId}' AND {$tablePrefix}posts.post_type = '{$postType}' AND {$tablePrefix}posts.post_status != 'trash'
-        ";
-        $results = $wpdb->get_results($sql, ARRAY_A);
-
-        if (empty($results)) {
-            return 0;
-        }
-
-        return (int)$results[0]['ID'];
-    }
-
-
-    /**
-     * updatePost($post, $force)
-     *
-     * Update post if RSS date is later, create new post if it doesn't exists within the post type
-     * @param object $post RSS post object (\ImportRssFeed\Post)
-     * @param boolean $force Wheter or not to force update
-     * @return boolean
-     */
-    public function updatePost(\ImportRssFeed\Post $post, $force = false)
-    {
-        $force = apply_filters('ImportRssFeed/ImportManager/updatePost/force', $force, $post);
-
-        if ($post->ID > 0) {
-            $newRssDate = strtotime($post->post_date);
-            $oldRssDate = get_post_meta($post->ID, 'rss_date');
-
-            if ($oldRssDate && $oldRssDate >= $newRssDate && !$force) {
-                return $post;
-            }
-        }
-
-        $args = get_object_vars($post);
-        $importedPostId = wp_insert_post(apply_filters('ImportRssFeed/ImportManager/updatePost/args', $args, $post,
-            $force));
-
-        if (is_integer($importedPostId)) {
-            switch ($post->ID) {
-                case 0:
-                    $this->createdPosts++;
-                    break;
-
-                default:
-                    $this->updatedPosts++;
-            }
-
-            $post->ID = $importedPostId;
-        }
-
-        return $post;
-    }
 
     /**
      * @param $array
@@ -201,11 +134,17 @@ class XmlRender extends \Modularity\Module
                 foreach ($designations as $item => $desvalue) {
                     $designationKey = key($designations[$item]);
                     if ($key === $designationKey) {
-                        $data[$index][$key]['Designation'] = $designations[$item][key($designations[$item])];
+                        if ($designations[$item][key($designations[$item])] === '') {
+                            $data[$index][$key]['Designation'] = 'metadata';
+                        } else {
+                            $data[$index][$key]['Designation'] = $designations[$item][key($designations[$item])];
+                        }
+
                     }
                 }
             }
         }
+
         return $data;
     }
 
@@ -235,30 +174,73 @@ class XmlRender extends \Modularity\Module
     }
 
     /**
+     * getPostId()
+     *
+     * Returns post id if it exists (based on post type & assignmentID)
+     * @return int
+     */
+    public function getPostId($asignmentId, $postType)
+    {
+
+        global $wpdb;
+        $tablePrefix = $wpdb->prefix;
+        $sql = "
+            SELECT {$tablePrefix}posts.ID
+            FROM {$tablePrefix}posts
+            LEFT JOIN {$tablePrefix}postmeta ON {$tablePrefix}postmeta.post_id = {$tablePrefix}posts.ID
+            WHERE {$tablePrefix}postmeta.meta_value = '{$asignmentId}' AND {$tablePrefix}posts.post_type = '{$postType}' AND {$tablePrefix}posts.post_status != 'trash'
+        ";
+        $results = $wpdb->get_results($sql, ARRAY_A);
+
+        if (empty($results)) {
+            return 0;
+        }
+
+        return (int)$results[0]['ID'];
+    }
+
+
+    /**
      * @param $data
      */
     public function exportToPostype($data)
     {
-        foreach($data as $key => $value){
-            foreach($data[$key] as $index => $dataValue ){
+        foreach ($data as $key => $value) {
+            foreach($data[$key] as $itemKeys => $item){
 
-                $this->ID = ($dataValue['Designation'] === 'postid') ? $dataValue['Value'] : 0;
-                $this->post_title = ($dataValue['Designation'] === 'posttitle') ? $dataValue['Value'] : 'Nyttjobb';
-                $this->post_excerpt = ($dataValue['Designation'] === 'postexcerpt') ? $dataValue['Value'] : 'Nyttjobb';
-                $this->post_content = ($dataValue['Designation'] === 'postcontent') ? $dataValue['Value'] : 'Nyttjobb';
-                $this->post_date = ($dataValue['Designation'] === 'postdate') ? $dataValue['Value'] : date('Y-m-d H:i:s');
+                if ($item['Designation'] === 'posttitle') {
+                    $this->post_title = $item['Value'];
+                }
 
-                if ($dataValue['Designation'] === 'metadata') {
-                    array_push($this->meta_input, array($index => $dataValue['Value']));
+                if ($item['Designation'] === 'postexcerpt') {
+                    $this->post_excerpt = $item['Value'];
+                }
+
+                if ($item['Designation'] === 'postcontent') {
+                    $this->post_content = $item['Value'];
+                }
+
+                if ($item['Designation'] === 'metadata') {
+                    array_push($this->meta_input, array($itemKeys => $item['Value']));
                 }
             }
 
-            //do_action('ImportRssFeed/Post', $this, $item);
+            $PostData = array(
+                'post_title' => $this->post_title,
+                'post_content' => $this->post_content,
+                'post_excerpt' => $this->post_excerpt,
+                'post_status' => 'publish',
+                'post_author' => 1,
+                'post_type' => $this->postType,
+            );
+
+            $postID = wp_insert_post($PostData);
+            if (count($this->meta_input) > 0 && $postID) {
+                foreach($this->meta_input as $metaKey => $value) {
+                    add_post_meta($postID, $metaKey, $value);
+                }
+            }
         }
-        
-        /*echo "<pre>";
-        print_r($this);
-        echo "</pre>";*/
 
         exit;
     }
@@ -277,6 +259,7 @@ class XmlRender extends \Modularity\Module
 
         if (array_key_exists('mod_xml_render_url', $_POST) && array_key_exists('mod_xml_render_fieldmap', $_POST)) {
 
+            $this->postType = $_POST['postType'];
             $url = $_POST['mod_xml_render_url'];
             $export = $_POST['exportToPostType'];
             $view = $_POST['mod_xml_render_view'];
