@@ -139,7 +139,6 @@ class XmlRender extends \Modularity\Module
                         } else {
                             $data[$index][$key]['Designation'] = $designations[$item][key($designations[$item])];
                         }
-
                     }
                 }
             }
@@ -173,32 +172,6 @@ class XmlRender extends \Modularity\Module
         $this->exportToPostype($exportDataMergedWithDesignation);
     }
 
-    /**
-     * getPostId()
-     *
-     * Returns post id if it exists (based on post type & assignmentID)
-     * @return int
-     */
-    public function getPostId($asignmentId, $postType)
-    {
-
-        global $wpdb;
-        $tablePrefix = $wpdb->prefix;
-        $sql = "
-            SELECT {$tablePrefix}posts.ID
-            FROM {$tablePrefix}posts
-            LEFT JOIN {$tablePrefix}postmeta ON {$tablePrefix}postmeta.post_id = {$tablePrefix}posts.ID
-            WHERE {$tablePrefix}postmeta.meta_value = '{$asignmentId}' AND {$tablePrefix}posts.post_type = '{$postType}' AND {$tablePrefix}posts.post_status != 'trash'
-        ";
-        $results = $wpdb->get_results($sql, ARRAY_A);
-
-        if (empty($results)) {
-            return 0;
-        }
-
-        return (int)$results[0]['ID'];
-    }
-
 
     /**
      * @param $data
@@ -206,7 +179,11 @@ class XmlRender extends \Modularity\Module
     public function exportToPostype($data)
     {
         foreach ($data as $key => $value) {
-            foreach($data[$key] as $itemKeys => $item){
+            foreach ($data[$key] as $itemKeys => $item) {
+
+                if ($item['Designation'] === 'metaId') {
+                    $this->metaId = $item['Value'];
+                }
 
                 if ($item['Designation'] === 'posttitle') {
                     $this->post_title = $item['Value'];
@@ -221,28 +198,59 @@ class XmlRender extends \Modularity\Module
                 }
 
                 if ($item['Designation'] === 'metadata') {
-                    array_push($this->meta_input, array($itemKeys => $item['Value']));
+                    array_push($this->meta_input, array($item['Designation'] => $item['Value']));
                 }
             }
 
-            $PostData = array(
-                'post_title' => $this->post_title,
-                'post_content' => $this->post_content,
-                'post_excerpt' => $this->post_excerpt,
-                'post_status' => 'publish',
-                'post_author' => 1,
-                'post_type' => $this->postType,
-            );
+            if ($this->metaId){
 
-            $postID = wp_insert_post($PostData);
-            if (count($this->meta_input) > 0 && $postID) {
-                foreach($this->meta_input as $metaKey => $value) {
-                    add_post_meta($postID, $metaKey, $value);
+                global $wpdb;
+                $postIdAssigned = $wpdb->get_results( "
+                    SELECT *
+                    FROM $wpdb->postmeta
+                    WHERE meta_key='metaId' 
+                    AND meta_value = '".$this->metaId."'"
+                );
+
+                if(count($postIdAssigned) > 0) {
+                    $postIdAssigned = (array) $postIdAssigned[0];
                 }
+
+                $PostData = array(
+                    'post_title' => $this->post_title,
+                    'post_content' => $this->post_content,
+                    'post_excerpt' => $this->post_excerpt,
+                    'post_status' => 'publish',
+                    'post_author' => 1,
+                    'post_type' => $this->postType,
+                );
+
+                if (isset($postIdAssigned['post_id']) && !empty($postIdAssigned['post_id'])) {
+
+                    $PostData['ID'] = $postIdAssigned['post_id'];
+                    wp_update_post($PostData);
+                    update_post_meta($postIdAssigned['post_id'], 'metaId', $this->metaId);
+                    if (count($this->meta_input) > 0 && $postIdAssigned['post_id']) {
+                        foreach ($this->meta_input as $metaKey => $value) {
+                            update_post_meta($postID, key($this->meta_input[$metaKey]), $value);
+                        }
+                    }
+                } else {
+
+                    $postID = wp_insert_post($PostData);
+                    add_post_meta($postID, 'metaId', $this->metaId);
+                    if (count($this->meta_input) > 0 && $postID) {
+                        foreach ($this->meta_input as $metaKey => $value) {
+                            add_post_meta($postID, key($this->meta_input[$metaKey]), $value);
+                        }
+                    }
+                }
+
+            } else {
+                echo "No Assignment Id, Please go back and assign...";
+                exit;
             }
         }
-
-        exit;
     }
 
 
@@ -267,6 +275,9 @@ class XmlRender extends \Modularity\Module
 
             if ($export === 'export') {
                 $this->exportData($url, $fieldMap);
+                update_post_meta($postId, 'xml_url', $url);
+                //update_post_meta($postId, 'view', $view);
+                update_post_meta($postId, 'fieldmap', $_POST['mod_xml_render_fieldmap']);
             }
 
             if ($url && $view && isset($fieldMap->heading) && !empty($fieldMap->heading)) {
@@ -386,7 +397,7 @@ class XmlRender extends \Modularity\Module
                 'designationValuesPostTitle' => __('Post title', 'modularity-xml-render'),
                 'designationValuesPostExcerpt' => __('Post excerpt', 'modularity-xml-render'),
                 'designationValuesPostContent' => __('Post content', 'modularity-xml-render'),
-                'designationValuesPostId' => __('Post id', 'modularity-xml-render'),
+                'designationValuesPostId' => __('Assignment Id', 'modularity-xml-render'),
                 'designationValuesPostDate' => __('Post date', 'modularity-xml-render'),
             )
         ));

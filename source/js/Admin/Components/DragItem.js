@@ -102,7 +102,7 @@ class DragItem extends React.Component {
                                             <option key="1" value="metadata">
                                                 {translation.designationValuesMetaData}
                                             </option>
-                                            <option key="2" value="postid">
+                                            <option key="2" value="metaId">
                                                 {translation.designationValuesPostId}
                                             </option>
                                             <option key="3" value="posttitle">
@@ -113,9 +113,6 @@ class DragItem extends React.Component {
                                             </option>
                                             <option key="5" value="postcontent">
                                                 {translation.designationValuesPostContent}
-                                            </option>
-                                            <option key="6" value="postdate">
-                                                {translation.designationValuesPostDate}
                                             </option>
                                         </select>
                                     </label>
