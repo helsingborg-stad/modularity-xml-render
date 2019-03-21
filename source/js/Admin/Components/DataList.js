@@ -21,7 +21,9 @@ class DataList extends React.Component {
     setView(e) {
         this.props.setView(e.target.value);
     }
-
+    setPostType(e) {
+        this.props.setPostType(e.target.value);
+    }
     renderNodes(data) {
         const originalData = this.props.data;
 
@@ -68,11 +70,30 @@ class DataList extends React.Component {
         });
     }
 
+    componentDidMount() {
+        const selectExportSettings = this.props;
+
+        if (selectExportSettings.setPostType !== '') {
+            document.getElementById('showDataDropDown').style.display = 'block';
+            document.getElementById('xml-view-inputs').style.display = 'none';
+            document.querySelector('.drop-container').classList.add('export');
+            document.getElementById('exportToPostType').checked = true;
+            this.props.setView('export');
+        }
+    }
+
     render() {
         let { data } = Object.assign({}, this.props);
         const xmldataKeys = null;
 
-        const { translation, view, doExport, postTypeId, postTypes } = this.props;
+        const {
+            translation,
+            view,
+            doExport,
+            postTypeId,
+            postTypes,
+            selectExportSettings,
+        } = this.props;
         const fieldMap = this.props.fieldMap;
 
         if (Array.isArray(data)) {
@@ -134,6 +155,8 @@ class DataList extends React.Component {
                             setView={this.setView.bind(this)}
                             translation={translation}
                             postTypes={Object.keys(postTypes).map(key => postTypes[key])}
+                            selectExportSettings={selectExportSettings.setPostType}
+                            setPostType={this.setPostType.bind(this)}
                         />
 
                         <div className="drop-container">

@@ -1,4 +1,4 @@
-const { translation, posttypes } = modXMLRender;
+const { translation, posttypes, setPostType } = modXMLRender;
 
 function dropAreas(view) {
     let dropAreas = [];
@@ -9,6 +9,7 @@ function dropAreas(view) {
                 limit: null,
                 label: translation.content,
                 postTypes: posttypes,
+                setPostType: setPostType,
             });
             break;
         case 'list':
@@ -34,4 +35,4 @@ function dropAreas(view) {
     return dropAreas;
 }
 
-export { dropAreas, translation, posttypes };
+export { dropAreas, translation, posttypes, setPostType };

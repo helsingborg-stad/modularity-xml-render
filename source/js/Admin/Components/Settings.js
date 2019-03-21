@@ -7,12 +7,14 @@ class Settings extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            setPostType: '',
             showFieldSelection: false,
             url: '',
             view: 'posttype',
             isLoaded: false,
             error: null,
             items: [],
+
             fieldMap: {
                 itemContainer: null,
                 heading: [],
@@ -23,6 +25,7 @@ class Settings extends React.Component {
 
     componentDidMount() {
         this.initOptions();
+        this.initSetPostType();
     }
 
     initOptions() {
@@ -39,6 +42,15 @@ class Settings extends React.Component {
                           content: [],
                       },
                 showFieldSelection: !!options.url,
+            });
+        }
+    }
+
+    initSetPostType() {
+        if (this.props.setPostType !== 'post' && this.props.setPostType !== '') {
+            const setPostType = this.props;
+            this.setState({
+                setPostType: setPostType,
             });
         }
     }
@@ -85,9 +97,14 @@ class Settings extends React.Component {
         this.setState({ view: value });
     }
 
+    setPostType(value) {
+        this.setState({ setPostType: value });
+        document.getElementById('setPostType').value = value;
+    }
+
     render() {
         const { translation, postTypes } = this.props;
-        const { showFieldSelection, url, view, error, isLoaded, items } = this.state;
+        const { showFieldSelection, url, view, error, isLoaded, items, setPostType } = this.state;
 
         if (showFieldSelection) {
             return (
@@ -106,6 +123,8 @@ class Settings extends React.Component {
                         updateFieldMap={this.updateFieldMap.bind(this)}
                         translation={translation}
                         postTypes={postTypes}
+                        setPostType={this.setPostType.bind(this)}
+                        selectExportSettings={setPostType}
                     />
                     <InputFields {...this.state} />
                     <p>

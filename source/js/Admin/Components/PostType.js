@@ -1,10 +1,20 @@
-const PostType = ({ doExport, xmlDataKeys, postTypeId, translation, postTypes, setView }) => (
+const PostType = ({
+    doExport,
+    xmlDataKeys,
+    postTypeId,
+    translation,
+    postTypes,
+    setView,
+    selectExportSettings,
+    setPostType,
+}) => (
     <div>
         <h3>{translation.exportToPostType}</h3>
         <div className="checkBox">
             <label>
                 <input
                     type="checkbox"
+                    id="exportToPostType"
                     name="exportToPostType"
                     value="export"
                     onChange={setView}
@@ -25,7 +35,8 @@ const PostType = ({ doExport, xmlDataKeys, postTypeId, translation, postTypes, s
         </div>
         <div id="showDataDropDown" className="postTypeDropDown">
             <label>
-                <select name="postType">
+                <select name="postType" value={selectExportSettings} onChange={setPostType}>
+                    <option disabled>{translation.posttypeChoose}</option>
                     {postTypes.map(ptype => (
                         <option key={ptype} value={ptype}>
                             {ptype}

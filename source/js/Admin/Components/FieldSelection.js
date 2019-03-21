@@ -32,9 +32,22 @@ class FieldSelection extends React.Component {
     setView(value) {
         this.props.setView(value);
     }
+    setPostType(value) {
+        this.props.setPostType(value);
+    }
 
     render() {
-        const { url, view, error, fieldMap, translation, postTypes, isLoaded, items } = this.props;
+        const {
+            url,
+            view,
+            error,
+            fieldMap,
+            translation,
+            postTypes,
+            isLoaded,
+            items,
+            selectExportSettings,
+        } = this.props;
 
         if (error) {
             return (
@@ -55,6 +68,8 @@ class FieldSelection extends React.Component {
                     updateFieldMap={this.updateFieldMap.bind(this)}
                     translation={translation}
                     postTypes={postTypes}
+                    setPostType={this.setPostType.bind(this)}
+                    selectExportSettings={selectExportSettings}
                 />
             );
         }

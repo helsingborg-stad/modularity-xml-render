@@ -97,8 +97,11 @@ class DragItem extends React.Component {
                                             data-name="designation"
                                             name="designation"
                                             onChange={fieldChange}
+                                            value={designation}
                                         >
-                                            <option key="0">{translation.designationChoose}</option>
+                                            <option key="0" disabled>
+                                                {translation.designationChoose}
+                                            </option>
                                             <option key="1" value="metadata">
                                                 {translation.designationValuesMetaData}
                                             </option>

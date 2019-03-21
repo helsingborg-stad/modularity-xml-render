@@ -2,6 +2,10 @@
 
 namespace ModularityXmlRender\Module;
 
+/**
+ * Class XmlRender
+ * @package ModularityXmlRender\Module
+ */
 class XmlRender extends \Modularity\Module
 {
     public $slug = 'xml-render';
@@ -17,7 +21,11 @@ class XmlRender extends \Modularity\Module
     public $post_status = 'publish';
     public $meta_input = [];
     public $postType = '';
+    public $metaId = null;
 
+    /**
+     *
+     */
     public function init()
     {
         //Define module
@@ -30,6 +38,9 @@ class XmlRender extends \Modularity\Module
         add_filter('post_updated_messages', array($this, 'updateNotices'));
     }
 
+    /**
+     *
+     */
     public function validationNotice()
     {
         if (!$errors = get_transient('mod_xml_render_error')) {
@@ -45,6 +56,10 @@ class XmlRender extends \Modularity\Module
         }
     }
 
+    /**
+     * @param $messages
+     * @return array
+     */
     public function updateNotices($messages)
     {
         if (!empty(get_transient('mod_xml_render_error'))) {
@@ -53,22 +68,6 @@ class XmlRender extends \Modularity\Module
 
         return $messages;
     }
-
-    /**
-     * postExists()
-     *
-     * Check wheter or not post already exists (within the post type)
-     * @return boolean
-     */
-    public function postExists()
-    {
-        if ($this->getPostId()) {
-            return true;
-        }
-
-        return false;
-    }
-
 
     /**
      * @param $array
@@ -172,6 +171,63 @@ class XmlRender extends \Modularity\Module
         $this->exportToPostype($exportDataMergedWithDesignation);
     }
 
+    /**
+     * @return array|object|null
+     */
+    public function getMetaData(){
+        global $wpdb;
+        $postIdAssigned = $wpdb->get_results( "
+                    SELECT *
+                    FROM $wpdb->postmeta
+                    WHERE meta_key='metaId' 
+                    AND meta_value = '".$this->metaId."'"
+        );
+        return $postIdAssigned;
+    }
+
+    /**
+     *
+     */
+    public function updatePostType(){
+
+        $postIdAssigned = $this->getMetaData();
+
+        if(count($postIdAssigned) > 0) {
+            $postIdAssigned = (array) $postIdAssigned[0];
+        }
+
+        $PostData = array(
+            'post_title' => $this->post_title,
+            'post_content' => $this->post_content,
+            'post_excerpt' => $this->post_excerpt,
+            'post_status' => 'publish',
+            'post_author' => 1,
+            'post_type' => $this->postType,
+        );
+
+        if (isset($postIdAssigned['post_id']) && !empty($postIdAssigned['post_id'])) {
+
+            $PostData['ID'] = $postIdAssigned['post_id'];
+            wp_update_post($PostData);
+            update_post_meta($postIdAssigned['post_id'], 'metaId', $this->metaId);
+
+            if (count($this->meta_input) > 0 && $postIdAssigned['post_id']) {
+                foreach ($this->meta_input as $metaKey => $value) {
+                    update_post_meta($PostData['ID'], key($this->meta_input[$metaKey]), $value);
+                }
+            }
+        } else {
+
+            $postID = wp_insert_post($PostData);
+            add_post_meta($postID, 'metaId', $this->metaId);
+
+            if (count($this->meta_input) > 0 && $postID) {
+                foreach ($this->meta_input as $metaKey => $value) {
+                    add_post_meta($postID, key($this->meta_input[$metaKey]), $value);
+                }
+            }
+        }
+    }
 
     /**
      * @param $data
@@ -203,56 +259,13 @@ class XmlRender extends \Modularity\Module
             }
 
             if ($this->metaId){
-
-                global $wpdb;
-                $postIdAssigned = $wpdb->get_results( "
-                    SELECT *
-                    FROM $wpdb->postmeta
-                    WHERE meta_key='metaId' 
-                    AND meta_value = '".$this->metaId."'"
-                );
-
-                if(count($postIdAssigned) > 0) {
-                    $postIdAssigned = (array) $postIdAssigned[0];
-                }
-
-                $PostData = array(
-                    'post_title' => $this->post_title,
-                    'post_content' => $this->post_content,
-                    'post_excerpt' => $this->post_excerpt,
-                    'post_status' => 'publish',
-                    'post_author' => 1,
-                    'post_type' => $this->postType,
-                );
-
-                if (isset($postIdAssigned['post_id']) && !empty($postIdAssigned['post_id'])) {
-
-                    $PostData['ID'] = $postIdAssigned['post_id'];
-                    wp_update_post($PostData);
-                    update_post_meta($postIdAssigned['post_id'], 'metaId', $this->metaId);
-                    if (count($this->meta_input) > 0 && $postIdAssigned['post_id']) {
-                        foreach ($this->meta_input as $metaKey => $value) {
-                            update_post_meta($postID, key($this->meta_input[$metaKey]), $value);
-                        }
-                    }
-                } else {
-
-                    $postID = wp_insert_post($PostData);
-                    add_post_meta($postID, 'metaId', $this->metaId);
-                    if (count($this->meta_input) > 0 && $postID) {
-                        foreach ($this->meta_input as $metaKey => $value) {
-                            add_post_meta($postID, key($this->meta_input[$metaKey]), $value);
-                        }
-                    }
-                }
-
+                $this->updatePostType();
             } else {
                 echo "No Assignment Id, Please go back and assign...";
                 exit;
             }
         }
     }
-
 
     /**
      * @param $postId
@@ -268,16 +281,19 @@ class XmlRender extends \Modularity\Module
         if (array_key_exists('mod_xml_render_url', $_POST) && array_key_exists('mod_xml_render_fieldmap', $_POST)) {
 
             $this->postType = $_POST['postType'];
+
             $url = $_POST['mod_xml_render_url'];
             $export = $_POST['exportToPostType'];
             $view = $_POST['mod_xml_render_view'];
             $fieldMap = json_decode(html_entity_decode(stripslashes($_POST['mod_xml_render_fieldmap'])));
+            $setPostType = $_POST['setPostType'];
 
             if ($export === 'export') {
-                $this->exportData($url, $fieldMap);
+                $this->exportData($url, $fieldMap, $setPostType);
                 update_post_meta($postId, 'xml_url', $url);
                 //update_post_meta($postId, 'view', $view);
                 update_post_meta($postId, 'fieldmap', $_POST['mod_xml_render_fieldmap']);
+                update_post_meta($postId, 'setPostType', $setPostType);
             }
 
             if ($url && $view && isset($fieldMap->heading) && !empty($fieldMap->heading)) {
@@ -295,6 +311,9 @@ class XmlRender extends \Modularity\Module
         }
     }
 
+    /**
+     *
+     */
     public function addSettingsError()
     {
         add_settings_error(
@@ -307,6 +326,9 @@ class XmlRender extends \Modularity\Module
         set_transient('mod_xml_render_error', get_settings_errors(), 30);
     }
 
+    /**
+     * @return arra
+     */
     public function data(): array
     {
         $options = $this->getOptions($this->ID);
@@ -321,11 +343,17 @@ class XmlRender extends \Modularity\Module
         return $data;
     }
 
+    /**
+     * @return string
+     */
     public function template(): string
     {
         return "list.blade.php";
     }
 
+    /**
+     *
+     */
     public function script()
     {
         // Enqueue React
@@ -349,6 +377,9 @@ class XmlRender extends \Modularity\Module
 
     }
 
+    /**
+     *
+     */
     public function adminEnqueue()
     {
         global $post;
@@ -364,6 +395,7 @@ class XmlRender extends \Modularity\Module
         wp_localize_script('modularity-xml-render-admin-js', 'modXMLRender', array(
             'options' => $options,
             'posttypes' => get_post_types(),
+            'setPostType' =>  get_post_meta($post->ID, 'setPostType', true),
             'translation' => array(
                 'resetSettings' => __('Reset settings', 'modularity-xml-render'),
                 'validXMLUrl' => __('Enter a valid XML api url.', 'modularity-xml-render'),
@@ -392,6 +424,7 @@ class XmlRender extends \Modularity\Module
                 'exportToPostType' => __('Export to post type', 'modularity-xml-render'),
                 'exportChoice' => __('Yes, export', 'modularity-xml-render'),
                 'designation' => __('Post-type designation', 'modularity-xml-render'),
+                'posttypeChoose' => __('Choose post type', 'modularity-xml-render'),
                 'designationChoose' => __('Choose designation', 'modularity-xml-render'),
                 'designationValuesMetaData' => __('Meta data', 'modularity-xml-render'),
                 'designationValuesPostTitle' => __('Post title', 'modularity-xml-render'),
@@ -405,6 +438,10 @@ class XmlRender extends \Modularity\Module
         wp_enqueue_style('modularity-' . $this->slug . '-admin'); // Enqueue styles
     }
 
+    /**
+     * @param $postId
+     * @return array
+     */
     public function getOptions($postId)
     {
         $url = get_post_meta($postId, 'xml_url', true);
