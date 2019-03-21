@@ -279,7 +279,9 @@ class XmlRender extends \Modularity\Module
         }
 
         if (array_key_exists('mod_xml_render_url', $_POST) && array_key_exists('mod_xml_render_fieldmap', $_POST)) {
-
+            if (!$_POST['postType']) {
+                return;
+            }
             $this->postType = $_POST['postType'];
 
             $url = $_POST['mod_xml_render_url'];
@@ -392,6 +394,7 @@ class XmlRender extends \Modularity\Module
 
         wp_enqueue_script('modularity-xml-render-admin-js');
         $options = $this->getOptions($post->ID);
+
         wp_localize_script('modularity-xml-render-admin-js', 'modXMLRender', array(
             'options' => $options,
             'posttypes' => get_post_types(),

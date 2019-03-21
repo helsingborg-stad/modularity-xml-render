@@ -71,14 +71,15 @@ class DataList extends React.Component {
     }
 
     componentDidMount() {
-        const selectExportSettings = this.props;
-
-        if (selectExportSettings.setPostType !== '') {
-            document.getElementById('showDataDropDown').style.display = 'block';
-            document.getElementById('xml-view-inputs').style.display = 'none';
-            document.querySelector('.drop-container').classList.add('export');
-            document.getElementById('exportToPostType').checked = true;
-            this.props.setView('export');
+        const { selectExportSettings } = this.props;
+        if (document.getElementById('showDataDropDown') !== null) {
+            if (selectExportSettings.setPostType !== undefined) {
+                document.getElementById('showDataDropDown').style.display = 'block';
+                document.getElementById('xml-view-inputs').style.display = 'none';
+                document.querySelector('.drop-container').classList.add('export');
+                document.getElementById('exportToPostType').checked = true;
+                this.props.setView('export');
+            }
         }
     }
 
