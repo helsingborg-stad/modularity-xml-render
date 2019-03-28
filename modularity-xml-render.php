@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Plugin Name:       Modularity XML Render
+ * Plugin Name:       Modularity XML Importer
  * Plugin URI:        
- * Description:       Plugin for parse and render xml data
+ * Description:       Plugin for parse and import xml data
  * Version:           1.0.0
- * Author:            Johan Silvergrund, Jonatan Hansson
+ * Author:            Johan Silvergrund, Jonatan Hansson, Sebastian Thulin
  * Author URI:        https://github.com/helsingborg-stad
  * License:           MIT
  * License URI:       https://opensource.org/licenses/MIT
